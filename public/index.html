@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>우리집</title>
+
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0F6E6B" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121A23" media="(prefers-color-scheme: dark)">
+
+<!-- 아이패드 / 아이폰 홈 화면 추가용 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="우리집">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="icon" href="/icon-192.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- ================= 로그인 ================= -->
+<section id="auth-view" class="hidden">
+  <div class="auth-card">
+    <h1 class="auth-mark">우리집</h1>
+    <p class="auth-sub" id="auth-sub">가족만 쓰는 메신저</p>
+
+    <form id="auth-form" autocomplete="on">
+      <input class="field" id="auth-name" type="text" placeholder="이름"
+             autocomplete="nickname" maxlength="20">
+      <input class="field" id="auth-email" type="email" placeholder="이메일"
+             autocomplete="username" required>
+      <input class="field" id="auth-pw" type="password" placeholder="비밀번호"
+             autocomplete="current-password" minlength="6" required>
+      <button class="btn" id="auth-submit" type="submit">로그인</button>
+    </form>
+
+    <div class="auth-error hidden" id="auth-error"></div>
+
+    <p class="auth-toggle">
+      <span id="auth-toggle-label">처음이신가요?</span>
+      <button type="button" id="auth-toggle">가입하기</button>
+    </p>
+  </div>
+</section>
+
+<!-- ================= 본 화면 ================= -->
+<section id="app-view" class="hidden">
+  <div class="shell" id="shell" data-view="rooms">
+
+    <!-- 방 목록 -->
+    <div class="pane-rooms">
+      <header class="bar">
+        <div class="bar__title">채팅방</div>
+        <button class="icon-btn" id="btn-new-room" title="새 채팅방" aria-label="새 채팅방">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="me-chip" id="btn-me" title="내 정보">
+          <span class="avatar avatar--sm" id="me-avatar"></span>
+          <span id="me-name"></span>
+        </button>
+      </header>
+
+      <div id="notif-nudge" class="nudge hidden"></div>
+
+      <div class="rooms-scroll" id="rooms-list"></div>
+    </div>
+
+    <!-- 대화 -->
+    <div class="pane-chat">
+      <header class="bar">
+        <button class="icon-btn only-narrow" id="btn-back" aria-label="목록으로">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="bar__title">
+          <div id="chat-title">대화를 고르세요</div>
+          <div class="bar__sub" id="chat-sub"></div>
+        </div>
+        <button class="icon-btn hidden" id="btn-notice" title="공지 등록" aria-label="공지 등록">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z"/>
+            <path d="M16 9a3 3 0 0 1 0 6"/></svg>
+        </button>
+        <button class="icon-btn hidden" id="btn-leave" title="방 나가기" aria-label="방 나가기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+      </header>
+
+      <div class="notice hidden" id="notice">
+        <div class="notice__body">
+          <svg class="notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z"/>
+            <path d="M16 9a3 3 0 0 1 0 6"/>
+          </svg>
+          <div class="notice__text" id="notice-text"></div>
+          <button class="notice__more hidden" id="notice-more">더보기</button>
+        </div>
+        <button class="icon-btn notice__edit" id="notice-edit" title="공지 수정" aria-label="공지 수정">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        </button>
+      </div>
+
+      <div class="msgs" id="msgs">
+        <div class="empty">
+          <div class="empty__line">왼쪽에서 방을 고르세요</div>
+          <div class="empty__hint">방이 없으면 + 를 눌러 새로 만들면 됩니다</div>
+        </div>
+      </div>
+
+      <div class="upload-bar hidden" id="upload-bar"></div>
+
+      <div class="composer hidden" id="composer">
+        <button class="icon-btn" id="btn-attach" title="파일 첨부" aria-label="파일 첨부">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <button class="icon-btn rec-btn" id="btn-rec" title="음성 녹음" aria-label="음성 녹음">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="2" width="6" height="12" rx="3"/>
+            <path d="M5 10a7 7 0 0 0 14 0M12 17v5"/></svg>
+        </button>
+        <textarea id="input" rows="1" placeholder="메시지 입력" enterkeyhint="send"></textarea>
+        <button class="send-btn" id="btn-send" disabled aria-label="보내기">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.5 20.6l17.2-7.4a1.3 1.3 0 0 0 0-2.4L3.5 3.4a1 1 0 0 0-1.4.9L2.1 9c0 .5.4.9.9 1L16 12 3 13c-.5.1-.9.5-.9 1l0 4.7c0 .7.7 1.2 1.4.9z"/></svg>
+        </button>
+        <input type="file" id="file-input" multiple class="hidden">
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div id="modal-root"></div>
+
+<script src="/config.js"></script>
+<script type="module" src="/app.js"></script>
+</body>
+</html>
