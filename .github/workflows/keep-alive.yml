@@ -1,0 +1,24 @@
+name: keep-alive
+
+on:
+  schedule:
+    - cron: '20 0 * * 1,4'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Supabase keep alive
+        run: |
+          code=$(curl -s -o /tmp/body.txt -w '%{http_code}' \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/rooms?select=id&limit=1")
+          echo "response code: $code"
+          if [ "$code" = "200" ] || [ "$code" = "401" ] || [ "$code" = "403" ]; then
+            echo "OK - project is awake"
+          else
+            cat /tmp/body.txt
+            exit 1
+          fi
