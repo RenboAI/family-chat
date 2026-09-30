@@ -10,15 +10,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Supabase keep alive
+        env:
+          URL: ${{ secrets.SUPABASE_URL }}
+          KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          code=$(curl -s -o /tmp/body.txt -w '%{http_code}' \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/rooms?select=id&limit=1")
-          echo "response code: $code"
-          if [ "$code" = "200" ] || [ "$code" = "401" ] || [ "$code" = "403" ]; then
-            echo "OK - project is awake"
-          else
+          base="${URL%/}"
+          now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          for i in 1 2 3; do
+            code=$(curl -s -o /tmp/body.txt -w '%{http_code}' \
+              -X PATCH \
+              -H "apikey: $KEY" \
+              -H "Authorization: Bearer $KEY" \
+              -H "Content-Type: application/json" \
+              -H "Prefer: return=minimal" \
+              --max-time 30 \
+              -d "{\"beat_at\":\"$now\"}" \
+              "$base/rest/v1/heartbeat?id=eq.1")
+            echo "attempt $i - code: $code"
+            if [ "$code" = "204" ] || [ "$code" = "200" ]; then
+              echo "OK - wrote to database"
+              exit 0
+            fi
             cat /tmp/body.txt
-            exit 1
-          fi
+            [ $i -lt 3 ] && sleep 20
+          done
+          exit 1
